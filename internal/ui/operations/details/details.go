@@ -183,7 +183,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if item, ok := m.files.SelectedItem().(item); ok {
 				item.selected = !item.selected
 				oldIndex := m.files.Index()
-				m.files.CursorDown()
 				return m, m.files.SetItem(oldIndex, item)
 			}
 			return m, nil
