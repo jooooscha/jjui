@@ -25,7 +25,7 @@ type Model struct {
 	keyMap  config.KeyMappings[key.Binding]
 }
 
-const DebounceTime = 200 * time.Millisecond
+const DebounceTime = 10 * time.Millisecond
 
 type refreshPreviewContentMsg struct {
 	Tag int
