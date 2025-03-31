@@ -13,7 +13,7 @@ var Current = &Config{
 	Keys: DefaultKeyMappings,
 	UI: UIConfig{
 		HighlightLight: "#a0a0a0",
-		HighlightDark:  "#7ebac3",
+		HighlightDark:  "#485567",
 	},
 	Preview: PreviewConfig{
 		ExtraArgs: []string{},
