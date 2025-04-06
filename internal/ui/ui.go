@@ -74,6 +74,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, cmd
 		}
 
+		if m.status.IsFocused() {
+			m.status, cmd = m.status.Update(msg)
+			return m, cmd
+		}
+
 		if m.revisions.IsFocused() {
 			m.revisions, cmd = m.revisions.Update(msg)
 			return m, cmd
@@ -95,6 +100,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, m.oplog.Init()
 		case key.Matches(msg, m.keyMap.Revset) && m.revisions.InNormalMode():
 			m.revsetModel, _ = m.revsetModel.Update(revset.EditRevSetMsg{Clear: m.state != common.Error})
+			return m, nil
 		case key.Matches(msg, m.keyMap.Git.Mode) && m.revisions.InNormalMode():
 			m.stacked = git.NewModel(m.context, m.revisions.SelectedRevision(), m.width, m.height)
 		case key.Matches(msg, m.keyMap.Undo) && m.revisions.InNormalMode():
@@ -110,6 +116,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.previewVisible = !m.previewVisible
 			cmds = append(cmds, common.SelectionChanged)
 			return m, tea.Batch(cmds...)
+		case key.Matches(msg, m.keyMap.QuickSearch) && m.oplog != nil:
+			//HACK: prevents quick search from activating in op log view
+			return m, nil
 		}
 	case common.ToggleHelpMsg:
 		if m.stacked == nil {
@@ -150,6 +159,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.status.SetWidth(m.width)
 	}
+
+	m.revsetModel, cmd = m.revsetModel.Update(msg)
+	cmds = append(cmds, cmd)
 
 	m.status, cmd = m.status.Update(msg)
 	cmds = append(cmds, cmd)
@@ -238,18 +250,22 @@ func (m Model) renderLeftView(footerHeight int, topViewHeight int) string {
 	return leftView
 }
 
-func New(c context.AppContext) tea.Model {
-	defaultRevSet, _ := c.RunCommandImmediate(jj.ConfigGet("revsets.log"))
-	revisionsModel := revisions.New(c)
+func New(c context.AppContext, initialRevset string) tea.Model {
+	if initialRevset == "" {
+		defaultRevset, _ := c.RunCommandImmediate(jj.ConfigGet("revsets.log"))
+		initialRevset = string(defaultRevset)
+	}
+	revisionsModel := revisions.New(c, initialRevset)
 	previewModel := preview.New(c)
 	statusModel := status.New(c)
 	return Model{
-		context:      c,
-		keyMap:       c.KeyMap(),
-		state:        common.Loading,
-		revisions:    &revisionsModel,
-		previewModel: &previewModel,
-		status:       &statusModel,
-		revsetModel:  revset.New(string(defaultRevSet)),
+		context:        c,
+		keyMap:         c.KeyMap(),
+		state:          common.Loading,
+		revisions:      &revisionsModel,
+		previewModel:   &previewModel,
+		previewVisible: config.Current.Preview.ShowAtStart,
+		status:         &statusModel,
+		revsetModel:    revset.New(initialRevset),
 	}
 }

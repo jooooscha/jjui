@@ -101,11 +101,6 @@ func (m Model) IsFocused() bool {
 	return m.Editing
 }
 
-var (
-	promptStyle = common.DefaultPalette.ChangeId.SetString("revset:")
-	cursorStyle = common.DefaultPalette.EmptyPlaceholder
-)
-
 type keymap struct{}
 
 func (k keymap) ShortHelp() []key.Binding {
@@ -152,6 +147,9 @@ func (m Model) Init() tea.Cmd {
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		if !m.Editing {
+			return m, nil
+		}
 		switch msg.Type {
 		case tea.KeyCtrlC, tea.KeyEsc:
 			m.Editing = false
@@ -162,8 +160,11 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			if m.Value == "" {
 				m.Value = m.defaultRevSet
 			}
-			return m, tea.Batch(common.Close, updateRevSet(m.Value))
+			return m, tea.Batch(common.Close, UpdateRevSet(m.Value))
 		}
+	case UpdateRevSetMsg:
+		m.Editing = false
+		m.Value = string(msg)
 	case EditRevSetMsg:
 		m.Editing = true
 		m.signatureHelp = ""
@@ -205,6 +206,11 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	return m, cmd
 }
 
+var (
+	promptStyle = common.DefaultPalette.ChangeId.SetString("revset:")
+	cursorStyle = common.DefaultPalette.EmptyPlaceholder
+)
+
 func (m Model) View() string {
 	if m.Editing {
 		if m.signatureHelp != "" {
@@ -223,7 +229,7 @@ func (m Model) View() string {
 
 type UpdateRevSetMsg string
 
-func updateRevSet(revset string) tea.Cmd {
+func UpdateRevSet(revset string) tea.Cmd {
 	return func() tea.Msg {
 		return UpdateRevSetMsg(revset)
 	}

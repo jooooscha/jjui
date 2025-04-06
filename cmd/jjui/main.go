@@ -17,11 +17,6 @@ import (
 
 var Version = "unknown"
 
-var (
-	versionFlag = flag.Bool("version", false, "show version")
-	configFlag  = flag.Bool("config", false, "edit config")
-)
-
 func getVersion() string {
 	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Version != "" {
 		return info.Main.Version
@@ -29,21 +24,47 @@ func getVersion() string {
 	return Version
 }
 
+var (
+	revset     string
+	version    bool
+	editConfig bool
+	help       bool
+)
+
+func init() {
+	flag.StringVar(&revset, "revset", "", "Set default revset")
+	flag.StringVar(&revset, "r", "", "Set default revset (same as --revset)")
+	flag.BoolVar(&version, "version", false, "Show version information")
+	flag.BoolVar(&editConfig, "config", false, "Open configuration file in $EDITOR")
+	flag.BoolVar(&help, "help", false, "Show help information")
+
+	flag.Usage = func() {
+		fmt.Printf("Usage: jjui [flags] [location]\n")
+		fmt.Println("Flags:")
+		flag.PrintDefaults()
+	}
+}
+
 func main() {
 	flag.Parse()
-	if *versionFlag {
-		println(getVersion())
+	switch {
+	case help:
+		flag.Usage()
 		os.Exit(0)
-	}
-	if *configFlag {
+	case version:
+		fmt.Println(getVersion())
+		os.Exit(0)
+	case editConfig:
 		exitCode := config.Edit()
 		os.Exit(exitCode)
 	}
 
 	var location string
-	if len(os.Args) > 1 {
-		location = os.Args[1]
-	} else {
+	if args := flag.Args(); len(args) > 0 {
+		location = args[0]
+	}
+
+	if location == "" {
 		location = os.Getenv("PWD")
 	}
 
@@ -55,7 +76,7 @@ func main() {
 
 	appContext := context.NewAppContext(rootLocation)
 
-	p := tea.NewProgram(ui.New(appContext), tea.WithAltScreen())
+	p := tea.NewProgram(ui.New(appContext, revset), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Error running program: %v\n", err)
 		os.Exit(1)

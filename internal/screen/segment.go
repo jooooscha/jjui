@@ -7,8 +7,36 @@ import (
 )
 
 type Segment struct {
-	Text   string
-	Params string
+	Text     string
+	Params   string
+	Reversed bool
+}
+
+func splitString(str, searchString string) []string {
+	index := strings.Index(str, searchString)
+	if index == -1 {
+		return []string{str}
+	}
+
+	before := str[:index]
+	after := str[index+len(searchString):]
+
+	return []string{before, searchString, after}
+}
+
+func (s Segment) Reverse(text string) []*Segment {
+	ret := make([]*Segment, 0)
+	for _, part := range splitString(s.Text, text) {
+		if part == "" {
+			continue
+		}
+		ret = append(ret, &Segment{
+			Text:     part,
+			Params:   s.Params,
+			Reversed: part == text,
+		})
+	}
+	return ret
 }
 
 func (s Segment) String() string {
@@ -18,10 +46,13 @@ func (s Segment) String() string {
 	if s.Params == "" {
 		return s.Text
 	}
+	if s.Reversed {
+		return fmt.Sprintf("\x1b[%sm\x1b[7m%s\x1b[0m", s.Params, s.Text)
+	}
 	return fmt.Sprintf("\x1b[%sm%s\x1b[0m", s.Params, s.Text)
 }
 
-func (s Segment) WithBackground(bg string) string {
+func (s Segment) WithBackground(bg string) *Segment {
 	var newParts []string
 	parts := strings.Split(s.Params, ";")
 
@@ -53,10 +84,10 @@ func (s Segment) WithBackground(bg string) string {
 		newParts = append(newParts, part)
 	}
 
-	return Segment{
+	return &Segment{
 		Text:   s.Text,
 		Params: strings.Join(newParts, ";"),
-	}.String()
+	}
 }
 
 func (s Segment) StyleEqual(other Segment) bool {

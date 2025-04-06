@@ -52,7 +52,7 @@ You can switch to op log view by pressing `o`. Pressing `r` restores the selecte
 ### Preview
 You can open the preview window by pressing `p`. If the selected item is a revision, then the output of `jj show` command is displayed. Similarly, `jj diff` output is displayed for selected files,  and `jj op show` output is displayed for selected operations. 
 
-While the preview window is showing, you can press; `ctrl+n` to scroll one line down, `ctrl+p` to scroll one line up, `ctrl+n` to scroll half a page down, `ctrl+u` to scroll half a page up. 
+While the preview window is showing, you can press; `ctrl+n` to scroll one line down, `ctrl+p` to scroll one line up, `ctrl+d` to scroll half a page down, `ctrl+u` to scroll half a page up. 
 
 Additionally, you can press `d` to show the contents of preview in diff view. 
 
@@ -121,7 +121,7 @@ You can download pre-built binaries from the [releases](https://github.com/idurs
 
 ## Compatibility
 
-It's compatible with jj **v0.21**+.
+Minimum supported `jj` version is **v0.21**+.
 
 ## Contributing
 

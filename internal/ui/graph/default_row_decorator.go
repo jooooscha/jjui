@@ -11,9 +11,11 @@ import (
 type DefaultRowDecorator struct {
 	Palette             common.Palette
 	HighlightBackground lipgloss.AdaptiveColor
+	SearchText          string
 	IsHighlighted       bool
 	IsSelected          bool
 	Op                  operations.Operation
+	Width               int
 }
 
 func (s *DefaultRowDecorator) RenderBefore(*jj.Commit) string {

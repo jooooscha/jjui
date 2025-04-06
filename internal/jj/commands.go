@@ -166,7 +166,11 @@ func Absorb(changeId string) CommandArgs {
 }
 
 func OpLog(limit int) CommandArgs {
-	return []string{"op", "log", "--color", "always", "--quiet", "--limit", strconv.Itoa(limit)}
+	args := []string{"op", "log", "--color", "always", "--quiet"}
+	if limit > 0 {
+		args = append(args, "--limit", strconv.Itoa(limit))
+	}
+	return args
 }
 
 func OpShow(operationId string) CommandArgs {

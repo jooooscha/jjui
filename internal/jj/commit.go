@@ -7,11 +7,9 @@ const (
 )
 
 type Commit struct {
-	ChangeIdShort string
 	ChangeId      string
 	IsWorkingCopy bool
 	Hidden        bool
-	CommitIdShort string
 	CommitId      string
 }
 

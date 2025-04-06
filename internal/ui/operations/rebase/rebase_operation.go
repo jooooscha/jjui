@@ -66,7 +66,7 @@ func (r *Operation) HandleKey(msg tea.KeyMsg) tea.Cmd {
 	case key.Matches(msg, r.keyMap.Apply):
 		source := sourceToFlags[r.Source]
 		target := targetToFlags[r.Target]
-		return r.context.RunCommand(jj.Rebase(r.From, r.To.ChangeIdShort, source, target), common.RefreshAndSelect(r.From), common.Close)
+		return r.context.RunCommand(jj.Rebase(r.From, r.To.ChangeId, source, target), common.RefreshAndSelect(r.From), common.Close)
 	case key.Matches(msg, r.keyMap.Cancel):
 		return common.Close
 	}
@@ -134,7 +134,7 @@ func (r *Operation) Render() string {
 		" ",
 		common.DefaultPalette.Dimmed.Render(ret),
 		" ",
-		common.DefaultPalette.ChangeId.Render(r.To.ChangeIdShort),
+		common.DefaultPalette.ChangeId.Render(r.To.ChangeId),
 	)
 }
 

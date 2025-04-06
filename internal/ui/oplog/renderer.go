@@ -20,7 +20,7 @@ func RenderRow(r io.Writer, row Row, highlighted bool, width int) {
 		lw := strings.Builder{}
 		for _, segment := range rowLine.Segments {
 			if highlighted {
-				fmt.Fprint(&lw, segment.WithBackground(highlightSeq))
+				fmt.Fprint(&lw, segment.WithBackground(highlightSeq).String())
 			} else {
 				fmt.Fprint(&lw, segment.String())
 			}

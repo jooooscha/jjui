@@ -7,26 +7,28 @@ import (
 )
 
 var DefaultKeyMappings = KeyMappings[keys]{
-	Up:           []string{"up", "k"},
-	Down:         []string{"down", "j"},
-	Apply:        []string{"enter"},
-	Cancel:       []string{"esc"},
-	ToggleSelect: []string{" "},
-	New:          []string{"n"},
-	Refresh:      []string{"ctrl+r"},
-	Quit:         []string{"q"},
-	Undo:         []string{"u"},
-	Describe:     []string{"D"},
-	Abandon:      []string{"a"},
-	Edit:         []string{"e"},
-	Diff:         []string{"d"},
-	Diffedit:     []string{"E"},
-	Absorb:       []string{"A"},
-	Split:        []string{"s"},
-	Squash:       []string{"S"},
-	Evolog:       []string{"v"},
-	Help:         []string{"?"},
-	Revset:       []string{"L"},
+	Up:               []string{"up", "k"},
+	Down:             []string{"down", "j"},
+	Apply:            []string{"enter"},
+	Cancel:           []string{"esc"},
+	ToggleSelect:     []string{" "},
+	New:              []string{"n"},
+	Refresh:          []string{"ctrl+r"},
+	Quit:             []string{"q"},
+	Undo:             []string{"u"},
+	Describe:         []string{"D"},
+	Abandon:          []string{"a"},
+	Edit:             []string{"e"},
+	Diff:             []string{"d"},
+	Diffedit:         []string{"E"},
+	Absorb:           []string{"A"},
+	Split:            []string{"s"},
+	Squash:           []string{"S"},
+	Evolog:           []string{"v"},
+	Help:             []string{"?"},
+	Revset:           []string{"L"},
+	QuickSearch:      []string{"/"},
+	QuickSearchCycle: []string{"'"},
 	Rebase: rebaseModeKeys[keys]{
 		Mode:     []string{"r"},
 		Revision: []string{"r"},
@@ -37,12 +39,13 @@ var DefaultKeyMappings = KeyMappings[keys]{
 		Onto:     []string{"d"},
 	},
 	Details: detailsModeKeys[keys]{
-		Mode:         []string{"l"},
-		Close:        []string{"h"},
-		Split:        []string{"s"},
-		Restore:      []string{"r"},
-		Diff:         []string{"d"},
-		ToggleSelect: []string{"m", " "},
+		Mode:                  []string{"l"},
+		Close:                 []string{"h"},
+		Split:                 []string{"s"},
+		Restore:               []string{"r"},
+		Diff:                  []string{"d"},
+		ToggleSelect:          []string{"m", " "},
+		RevisionsChangingFile: []string{"*"},
 	},
 	Preview: previewModeKeys[keys]{
 		Mode:         []string{"p"},
@@ -73,26 +76,28 @@ var DefaultKeyMappings = KeyMappings[keys]{
 
 func Convert(m KeyMappings[keys]) KeyMappings[key.Binding] {
 	return KeyMappings[key.Binding]{
-		Up:           key.NewBinding(key.WithKeys(m.Up...), key.WithHelp(join(m.Up), "up")),
-		Down:         key.NewBinding(key.WithKeys(m.Down...), key.WithHelp(join(m.Down), "down")),
-		Apply:        key.NewBinding(key.WithKeys(m.Apply...), key.WithHelp(join(m.Apply), "apply")),
-		Cancel:       key.NewBinding(key.WithKeys(m.Cancel...), key.WithHelp(join(m.Cancel), "cancel")),
-		ToggleSelect: key.NewBinding(key.WithKeys(m.ToggleSelect...), key.WithHelp(join(m.ToggleSelect), "toggle selection")),
-		New:          key.NewBinding(key.WithKeys(m.New...), key.WithHelp(join(m.New), "new")),
-		Refresh:      key.NewBinding(key.WithKeys(m.Refresh...), key.WithHelp(join(m.Refresh), "refresh")),
-		Quit:         key.NewBinding(key.WithKeys(m.Quit...), key.WithHelp(join(m.Quit), "quit")),
-		Diff:         key.NewBinding(key.WithKeys(m.Diff...), key.WithHelp(join(m.Diff), "diff")),
-		Describe:     key.NewBinding(key.WithKeys(m.Describe...), key.WithHelp(join(m.Describe), "describe")),
-		Undo:         key.NewBinding(key.WithKeys(m.Undo...), key.WithHelp(join(m.Undo), "undo")),
-		Abandon:      key.NewBinding(key.WithKeys(m.Abandon...), key.WithHelp(join(m.Abandon), "abandon")),
-		Edit:         key.NewBinding(key.WithKeys(m.Edit...), key.WithHelp(join(m.Edit), "edit")),
-		Diffedit:     key.NewBinding(key.WithKeys(m.Diffedit...), key.WithHelp(join(m.Diffedit), "diff edit")),
-		Absorb:       key.NewBinding(key.WithKeys(m.Absorb...), key.WithHelp(join(m.Absorb), "absorb")),
-		Split:        key.NewBinding(key.WithKeys(m.Split...), key.WithHelp(join(m.Split), "split")),
-		Squash:       key.NewBinding(key.WithKeys(m.Squash...), key.WithHelp(join(m.Squash), "squash")),
-		Help:         key.NewBinding(key.WithKeys(m.Help...), key.WithHelp(join(m.Help), "help")),
-		Evolog:       key.NewBinding(key.WithKeys(m.Evolog...), key.WithHelp(join(m.Evolog), "evolog")),
-		Revset:       key.NewBinding(key.WithKeys(m.Revset...), key.WithHelp(join(m.Revset), "revset")),
+		Up:               key.NewBinding(key.WithKeys(m.Up...), key.WithHelp(join(m.Up), "up")),
+		Down:             key.NewBinding(key.WithKeys(m.Down...), key.WithHelp(join(m.Down), "down")),
+		Apply:            key.NewBinding(key.WithKeys(m.Apply...), key.WithHelp(join(m.Apply), "apply")),
+		Cancel:           key.NewBinding(key.WithKeys(m.Cancel...), key.WithHelp(join(m.Cancel), "cancel")),
+		ToggleSelect:     key.NewBinding(key.WithKeys(m.ToggleSelect...), key.WithHelp(join(m.ToggleSelect), "toggle selection")),
+		New:              key.NewBinding(key.WithKeys(m.New...), key.WithHelp(join(m.New), "new")),
+		Refresh:          key.NewBinding(key.WithKeys(m.Refresh...), key.WithHelp(join(m.Refresh), "refresh")),
+		Quit:             key.NewBinding(key.WithKeys(m.Quit...), key.WithHelp(join(m.Quit), "quit")),
+		Diff:             key.NewBinding(key.WithKeys(m.Diff...), key.WithHelp(join(m.Diff), "diff")),
+		Describe:         key.NewBinding(key.WithKeys(m.Describe...), key.WithHelp(join(m.Describe), "describe")),
+		Undo:             key.NewBinding(key.WithKeys(m.Undo...), key.WithHelp(join(m.Undo), "undo")),
+		Abandon:          key.NewBinding(key.WithKeys(m.Abandon...), key.WithHelp(join(m.Abandon), "abandon")),
+		Edit:             key.NewBinding(key.WithKeys(m.Edit...), key.WithHelp(join(m.Edit), "edit")),
+		Diffedit:         key.NewBinding(key.WithKeys(m.Diffedit...), key.WithHelp(join(m.Diffedit), "diff edit")),
+		Absorb:           key.NewBinding(key.WithKeys(m.Absorb...), key.WithHelp(join(m.Absorb), "absorb")),
+		Split:            key.NewBinding(key.WithKeys(m.Split...), key.WithHelp(join(m.Split), "split")),
+		Squash:           key.NewBinding(key.WithKeys(m.Squash...), key.WithHelp(join(m.Squash), "squash")),
+		Help:             key.NewBinding(key.WithKeys(m.Help...), key.WithHelp(join(m.Help), "help")),
+		Evolog:           key.NewBinding(key.WithKeys(m.Evolog...), key.WithHelp(join(m.Evolog), "evolog")),
+		Revset:           key.NewBinding(key.WithKeys(m.Revset...), key.WithHelp(join(m.Revset), "revset")),
+		QuickSearch:      key.NewBinding(key.WithKeys(m.QuickSearch...), key.WithHelp(join(m.QuickSearch), "quick search")),
+		QuickSearchCycle: key.NewBinding(key.WithKeys(m.QuickSearchCycle...), key.WithHelp(join(m.QuickSearchCycle), "locate next match")),
 		Rebase: rebaseModeKeys[key.Binding]{
 			Mode:     key.NewBinding(key.WithKeys(m.Rebase.Mode...), key.WithHelp(join(m.Rebase.Mode), "rebase")),
 			Revision: key.NewBinding(key.WithKeys(m.Rebase.Revision...), key.WithHelp(join(m.Rebase.Revision), "change source to revision")),
@@ -103,12 +108,13 @@ func Convert(m KeyMappings[keys]) KeyMappings[key.Binding] {
 			Onto:     key.NewBinding(key.WithKeys(m.Rebase.Onto...), key.WithHelp(join(m.Rebase.Onto), "change target to onto")),
 		},
 		Details: detailsModeKeys[key.Binding]{
-			Mode:         key.NewBinding(key.WithKeys(m.Details.Mode...), key.WithHelp(join(m.Details.Mode), "details")),
-			Close:        key.NewBinding(key.WithKeys(m.Details.Close...), key.WithHelp(join(m.Details.Close), "close")),
-			Split:        key.NewBinding(key.WithKeys(m.Details.Split...), key.WithHelp(join(m.Details.Split), "details split")),
-			Restore:      key.NewBinding(key.WithKeys(m.Details.Restore...), key.WithHelp(join(m.Details.Restore), "details restore")),
-			Diff:         key.NewBinding(key.WithKeys(m.Details.Diff...), key.WithHelp(join(m.Details.Diff), "details diff")),
-			ToggleSelect: key.NewBinding(key.WithKeys(m.Details.ToggleSelect...), key.WithHelp(join(m.Details.ToggleSelect), "details toggle select")),
+			Mode:                  key.NewBinding(key.WithKeys(m.Details.Mode...), key.WithHelp(join(m.Details.Mode), "details")),
+			Close:                 key.NewBinding(key.WithKeys(m.Details.Close...), key.WithHelp(join(m.Details.Close), "close")),
+			Split:                 key.NewBinding(key.WithKeys(m.Details.Split...), key.WithHelp(join(m.Details.Split), "details split")),
+			Restore:               key.NewBinding(key.WithKeys(m.Details.Restore...), key.WithHelp(join(m.Details.Restore), "details restore")),
+			Diff:                  key.NewBinding(key.WithKeys(m.Details.Diff...), key.WithHelp(join(m.Details.Diff), "details diff")),
+			ToggleSelect:          key.NewBinding(key.WithKeys(m.Details.ToggleSelect...), key.WithHelp(join(m.Details.ToggleSelect), "details toggle select")),
+			RevisionsChangingFile: key.NewBinding(key.WithKeys(m.Details.RevisionsChangingFile...), key.WithHelp(join(m.Details.RevisionsChangingFile), "show revisions changing file")),
 		},
 		Bookmark: bookmarkModeKeys[key.Binding]{
 			Mode:    key.NewBinding(key.WithKeys(m.Bookmark.Mode...), key.WithHelp(join(m.Bookmark.Mode), "bookmarks")),
@@ -162,32 +168,34 @@ func join(keys []string) string {
 type keys []string
 
 type KeyMappings[T any] struct {
-	Up           T                   `toml:"up"`
-	Down         T                   `toml:"down"`
-	Apply        T                   `toml:"apply"`
-	Cancel       T                   `toml:"cancel"`
-	ToggleSelect T                   `toml:"toggle_select"`
-	New          T                   `toml:"new"`
-	Refresh      T                   `toml:"refresh"`
-	Abandon      T                   `toml:"abandon"`
-	Diff         T                   `toml:"diff"`
-	Quit         T                   `toml:"quit"`
-	Help         T                   `toml:"help"`
-	Describe     T                   `toml:"describe"`
-	Edit         T                   `toml:"edit"`
-	Diffedit     T                   `toml:"diffedit"`
-	Absorb       T                   `toml:"absorb"`
-	Split        T                   `toml:"split"`
-	Squash       T                   `toml:"squash"`
-	Undo         T                   `toml:"undo"`
-	Evolog       T                   `toml:"evolog"`
-	Revset       T                   `toml:"revset"`
-	Rebase       rebaseModeKeys[T]   `toml:"rebase"`
-	Details      detailsModeKeys[T]  `toml:"details"`
-	Preview      previewModeKeys[T]  `toml:"preview"`
-	Bookmark     bookmarkModeKeys[T] `toml:"bookmark"`
-	Git          gitModeKeys[T]      `toml:"git"`
-	OpLog        opLogModeKeys[T]    `toml:"oplog"`
+	Up               T                   `toml:"up"`
+	Down             T                   `toml:"down"`
+	Apply            T                   `toml:"apply"`
+	Cancel           T                   `toml:"cancel"`
+	ToggleSelect     T                   `toml:"toggle_select"`
+	New              T                   `toml:"new"`
+	Refresh          T                   `toml:"refresh"`
+	Abandon          T                   `toml:"abandon"`
+	Diff             T                   `toml:"diff"`
+	Quit             T                   `toml:"quit"`
+	Help             T                   `toml:"help"`
+	Describe         T                   `toml:"describe"`
+	Edit             T                   `toml:"edit"`
+	Diffedit         T                   `toml:"diffedit"`
+	Absorb           T                   `toml:"absorb"`
+	Split            T                   `toml:"split"`
+	Squash           T                   `toml:"squash"`
+	Undo             T                   `toml:"undo"`
+	Evolog           T                   `toml:"evolog"`
+	Revset           T                   `toml:"revset"`
+	QuickSearch      T                   `toml:"quick_search"`
+	QuickSearchCycle T                   `toml:"quick_search_cycle"`
+	Rebase           rebaseModeKeys[T]   `toml:"rebase"`
+	Details          detailsModeKeys[T]  `toml:"details"`
+	Preview          previewModeKeys[T]  `toml:"preview"`
+	Bookmark         bookmarkModeKeys[T] `toml:"bookmark"`
+	Git              gitModeKeys[T]      `toml:"git"`
+	OpLog            opLogModeKeys[T]    `toml:"oplog"`
 }
 
 type bookmarkModeKeys[T any] struct {
@@ -211,12 +219,13 @@ type rebaseModeKeys[T any] struct {
 }
 
 type detailsModeKeys[T any] struct {
-	Mode         T `toml:"mode"`
-	Close        T `toml:"close"`
-	Split        T `toml:"split"`
-	Restore      T `toml:"restore"`
-	Diff         T `toml:"diff"`
-	ToggleSelect T `toml:"select"`
+	Mode                  T `toml:"mode"`
+	Close                 T `toml:"close"`
+	Split                 T `toml:"split"`
+	Restore               T `toml:"restore"`
+	Diff                  T `toml:"diff"`
+	ToggleSelect          T `toml:"select"`
+	RevisionsChangingFile T `toml:"revisions_changing_file"`
 }
 
 type gitModeKeys[T any] struct {

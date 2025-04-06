@@ -91,16 +91,17 @@ func (o Operation) Render() string {
 	selectedLineStart := -1
 	selectedLineEnd := -1
 	for i, row := range o.rows {
-		nodeRenderer := &graph.DefaultRowDecorator{
+		nodeRenderer := graph.DefaultRowDecorator{
 			Palette:       common.DefaultPalette,
 			Op:            &operations.Default{},
 			IsHighlighted: i == o.cursor,
+			Width:         o.width,
 		}
 
 		if i == o.cursor {
 			selectedLineStart = w.LineCount()
 		}
-		graph.RenderRow(&w, row, nodeRenderer, nodeRenderer.IsHighlighted, o.width)
+		graph.RenderRow(&w, row, nodeRenderer)
 		if i == o.cursor {
 			selectedLineEnd = w.LineCount()
 		}

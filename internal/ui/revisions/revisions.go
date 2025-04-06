@@ -43,6 +43,7 @@ type Model struct {
 	keymap      config.KeyMappings[key.Binding]
 	output      string
 	err         error
+	quickSearch string
 }
 
 type updateRevisionsMsg struct {
@@ -126,6 +127,12 @@ func (m *Model) Update(msg tea.Msg) (*Model, tea.Cmd) {
 	case revset.UpdateRevSetMsg:
 		m.revsetValue = string(msg)
 		return m, common.Refresh
+	case common.QuickSearchMsg:
+		m.quickSearch = string(msg)
+		m.cursor = m.search(0)
+		m.op = operations.NewDefault(m.context)
+		m.viewRange = &viewRange{start: 0, end: 0}
+		return m, nil
 	case common.CommandCompletedMsg:
 		m.output = msg.Output
 		m.err = msg.Err
@@ -166,6 +173,10 @@ func (m *Model) Update(msg tea.Msg) (*Model, tea.Cmd) {
 				m.rows[m.cursor].IsSelected = !m.rows[m.cursor].IsSelected
 			case key.Matches(msg, m.keymap.Cancel):
 				m.op = operations.NewDefault(m.context)
+			case key.Matches(msg, m.keymap.QuickSearchCycle):
+				m.cursor = m.search(m.cursor + 1)
+				m.viewRange = &viewRange{start: 0, end: 0}
+				return m, nil
 			case key.Matches(msg, m.keymap.Details.Mode):
 				m.op, cmd = details.NewOperation(m.context, m.SelectedRevision())
 			case key.Matches(msg, m.keymap.New):
@@ -209,12 +220,12 @@ func (m *Model) Update(msg tea.Msg) (*Model, tea.Cmd) {
 			case key.Matches(msg, m.keymap.Refresh):
 				cmd = common.Refresh
 			case key.Matches(msg, m.keymap.Squash):
-				m.op = squash.NewOperation(m.context, m.SelectedRevision().ChangeIdShort)
+				m.op = squash.NewOperation(m.context, m.SelectedRevision().ChangeId)
 				if m.cursor < len(m.rows)-1 {
 					m.cursor++
 				}
 			case key.Matches(msg, m.keymap.Rebase.Mode):
-				m.op = rebase.NewOperation(m.context, m.SelectedRevision().ChangeIdShort, rebase.SourceRevision, rebase.TargetDestination)
+				m.op = rebase.NewOperation(m.context, m.SelectedRevision().ChangeId, rebase.SourceRevision, rebase.TargetDestination)
 			case key.Matches(msg, m.keymap.Quit):
 				return m, tea.Quit
 			}
@@ -315,15 +326,17 @@ func (m *Model) View() string {
 				continue
 			}
 		}
-		nodeRenderer := &graph.DefaultRowDecorator{
+		nodeRenderer := graph.DefaultRowDecorator{
 			Palette:             common.DefaultPalette,
 			Op:                  m.op,
 			HighlightBackground: highlightBackground,
+			SearchText:          m.quickSearch,
 			IsHighlighted:       i == m.cursor,
 			IsSelected:          row.IsSelected,
+			Width:               m.width,
 		}
 
-		graph.RenderRow(&w, row, nodeRenderer, nodeRenderer.IsHighlighted, m.width)
+		graph.RenderRow(&w, row, nodeRenderer)
 		if i == m.cursor {
 			selectedLineEnd = w.LineCount()
 		}
@@ -365,26 +378,46 @@ func (m *Model) selectRevision(revision string) int {
 		if revision == "@" {
 			return row.Commit.IsWorkingCopy
 		}
-		return row.Commit.GetChangeId() == revision || row.Commit.ChangeIdShort == revision
+		return row.Commit.GetChangeId() == revision || row.Commit.ChangeId == revision
 	})
 	return idx
+}
+
+func (m *Model) search(startIndex int) int {
+	if m.quickSearch == "" {
+		return m.cursor
+	}
+
+	n := len(m.rows)
+	for i := startIndex; i < n+startIndex; i++ {
+		c := i % n
+		row := &m.rows[c]
+		for _, line := range row.Lines {
+			for _, segment := range line.Segments {
+				if segment.Text != "" && strings.Contains(segment.Text, m.quickSearch) {
+					return c
+				}
+			}
+		}
+	}
+	return m.cursor
 }
 
 func (m *Model) CurrentOperation() operations.Operation {
 	return m.op
 }
 
-func New(c context.AppContext) Model {
+func New(c context.AppContext, revset string) Model {
 	v := viewRange{start: 0, end: 0}
 	keymap := c.KeyMap()
-	return Model{
-		context:   c,
-		keymap:    keymap,
-		rows:      nil,
-		viewRange: &v,
-		op:        operations.NewDefault(c),
-		cursor:    0,
-		width:     20,
-		height:    10,
+	return Model{context: c,
+		keymap:      keymap,
+		revsetValue: revset,
+		rows:        nil,
+		viewRange:   &v,
+		op:          operations.NewDefault(c),
+		cursor:      0,
+		width:       20,
+		height:      10,
 	}
 }

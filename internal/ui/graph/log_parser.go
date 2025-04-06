@@ -14,7 +14,7 @@ func ParseRows(reader io.Reader) []Row {
 
 	for segmentedLine := range screen.BreakNewLinesIter(rawSegments) {
 		rowLine := NewGraphRowLine(segmentedLine)
-		if changeIdIdx := rowLine.FindIdIndex(0); changeIdIdx != -1 {
+		if changeIdIdx := rowLine.FindPossibleChangeIdIdx(); changeIdIdx != -1 {
 			rowLine.Flags = Revision | Highlightable
 			previousRow := row
 			row = NewGraphRow()
@@ -26,13 +26,10 @@ func ParseRows(reader io.Reader) []Row {
 				row.Indent += utf8.RuneCountInString(rowLine.Segments[j].Text)
 			}
 			rowLine.ChangeIdIdx = changeIdIdx
-			row.Commit.ChangeIdShort = rowLine.Segments[changeIdIdx].Text
-			row.Commit.ChangeId = row.Commit.ChangeIdShort + rowLine.Segments[changeIdIdx+1].Text
-			commitIdIdx := rowLine.FindIdIndex(changeIdIdx + 2)
-			if commitIdIdx != -1 {
+			row.Commit.ChangeId = rowLine.Segments[changeIdIdx].Text
+			if commitIdIdx := rowLine.FindPossibleCommitIdIdx(changeIdIdx); commitIdIdx != -1 {
 				rowLine.CommitIdIdx = commitIdIdx
-				row.Commit.CommitIdShort = rowLine.Segments[commitIdIdx].Text
-				row.Commit.CommitId = row.Commit.CommitIdShort + rowLine.Segments[commitIdIdx+1].Text
+				row.Commit.CommitId = rowLine.Segments[commitIdIdx].Text
 			} else {
 				log.Fatalln("commit id not found")
 			}

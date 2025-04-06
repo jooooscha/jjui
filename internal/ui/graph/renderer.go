@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/idursun/jjui/internal/config"
 	"github.com/idursun/jjui/internal/ui/common"
 )
 
@@ -58,7 +57,7 @@ func (r *Renderer) Reset() {
 	r.lineCount = 0
 }
 
-func RenderRow(r io.Writer, row Row, renderer RowDecorator, highlighted bool, width int) {
+func RenderRow(r io.Writer, row Row, renderer DefaultRowDecorator) {
 	// will render by extending the previous connections
 	before := renderer.RenderBefore(row.Commit)
 	if before != "" {
@@ -75,12 +74,7 @@ func RenderRow(r io.Writer, row Row, renderer RowDecorator, highlighted bool, wi
 		}
 	}
 
-	highlightColor := lipgloss.AdaptiveColor{
-		Light: config.Current.UI.HighlightLight,
-		Dark:  config.Current.UI.HighlightDark,
-	}
-
-	highlightSeq := lipgloss.ColorProfile().FromColor(highlightColor).Sequence(true)
+	highlightSeq := lipgloss.ColorProfile().FromColor(renderer.HighlightBackground).Sequence(true)
 	var lastLine *GraphRowLine
 	for segmentedLine := range row.RowLinesIter(Including(Highlightable)) {
 		lastLine = segmentedLine
@@ -91,29 +85,35 @@ func RenderRow(r io.Writer, row Row, renderer RowDecorator, highlighted bool, wi
 					fmt.Fprint(&lw, decoration)
 				}
 			}
-			if highlighted && i == segmentedLine.CommitIdIdx {
+			if renderer.IsHighlighted && i == segmentedLine.CommitIdIdx {
 				if decoration := renderer.RenderBeforeCommitId(); decoration != "" {
 					fmt.Fprint(&lw, decoration)
 				}
 			}
-			if highlighted {
-				fmt.Fprint(&lw, segment.WithBackground(highlightSeq))
+			if renderer.IsHighlighted {
+				segment = segment.WithBackground(highlightSeq)
+			}
+
+			if renderer.IsHighlighted && renderer.SearchText != "" && strings.Contains(segment.Text, renderer.SearchText) {
+				for _, part := range segment.Reverse(renderer.SearchText) {
+					fmt.Fprint(&lw, part.String())
+				}
 			} else {
 				fmt.Fprint(&lw, segment.String())
 			}
 		}
 		if segmentedLine.Flags&Revision == Revision && row.IsAffected {
 			style := common.DefaultPalette.Dimmed
-			if highlighted {
-				style = common.DefaultPalette.Dimmed.Background(highlightColor)
+			if renderer.IsHighlighted {
+				style = common.DefaultPalette.Dimmed.Background(renderer.HighlightBackground)
 			}
 			fmt.Fprint(&lw, style.Render(" (affected by last operation)"))
 		}
 		line := lw.String()
 		fmt.Fprint(r, line)
-		if highlighted {
+		if renderer.IsHighlighted {
 			lineWidth := lipgloss.Width(line)
-			gap := width - lineWidth
+			gap := renderer.Width - lineWidth
 			if gap > 0 {
 				fmt.Fprintf(r, "\033[%sm%s\033[0m", highlightSeq, strings.Repeat(" ", gap))
 			}

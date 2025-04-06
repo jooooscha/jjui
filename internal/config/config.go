@@ -16,7 +16,11 @@ var Current = &Config{
 		HighlightDark:  "#485567",
 	},
 	Preview: PreviewConfig{
-		ExtraArgs: []string{},
+		ExtraArgs:   []string{},
+		ShowAtStart: false,
+	},
+	OpLog: OpLogConfig{
+		Limit: 200,
 	},
 }
 
@@ -24,6 +28,7 @@ type Config struct {
 	Keys    KeyMappings[keys] `toml:"keys"`
 	UI      UIConfig          `toml:"ui"`
 	Preview PreviewConfig     `toml:"preview"`
+	OpLog   OpLogConfig       `toml:"oplog"`
 }
 
 type UIConfig struct {
@@ -32,7 +37,12 @@ type UIConfig struct {
 }
 
 type PreviewConfig struct {
-	ExtraArgs []string `toml:"extra_args"`
+	ExtraArgs   []string `toml:"extra_args"`
+	ShowAtStart bool     `toml:"show_at_start"`
+}
+
+type OpLogConfig struct {
+	Limit int `toml:"limit"`
 }
 
 func getConfigFilePath() string {

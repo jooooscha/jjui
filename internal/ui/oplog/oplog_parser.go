@@ -20,5 +20,6 @@ func ParseRows(reader io.Reader) []Row {
 		}
 		row.Lines = append(row.Lines, &rowLine)
 	}
+	rows = append(rows, row)
 	return rows
 }

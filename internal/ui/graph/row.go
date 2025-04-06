@@ -4,6 +4,7 @@ import (
 	"github.com/idursun/jjui/internal/jj"
 	"github.com/idursun/jjui/internal/screen"
 	"strings"
+	"unicode"
 )
 
 type Row struct {
@@ -71,21 +72,6 @@ func (gr *GraphRowLine) Extend(indent int) GraphRowLine {
 	}
 	return ret
 }
-func (gr *GraphRowLine) FindIdIndex(start int) int {
-	for i := start; i < len(gr.Segments); i++ {
-		cur := gr.Segments[i].Text
-		if cur != "" && !strings.Contains(cur, " ") {
-			n := i + 1
-			if n < len(gr.Segments) {
-				cur = gr.Segments[n].Text
-				if cur != "" && !strings.Contains(cur, " ") {
-					return i
-				}
-			}
-		}
-	}
-	return -1
-}
 
 func (gr *GraphRowLine) ContainsRune(r rune, indent int) bool {
 	for _, segment := range gr.Segments {
@@ -99,6 +85,46 @@ func (gr *GraphRowLine) ContainsRune(r rune, indent int) bool {
 		}
 	}
 	return false
+}
+
+func IsChangeIdLike(s string) bool {
+	for _, r := range s {
+		if !unicode.IsLetter(r) {
+			return false
+		}
+	}
+	return true
+}
+
+func IsHexLike(s string) bool {
+	for _, r := range s {
+		// Convert the rune to lowercase for case-insensitive comparison
+		lowerChar := unicode.ToLower(r)
+		if !(lowerChar >= 'a' && lowerChar <= 'f') && !(lowerChar >= '0' && lowerChar <= '9') {
+			return false
+		}
+	}
+	return true
+}
+
+func (gr *GraphRowLine) FindPossibleChangeIdIdx() int {
+	for i, segment := range gr.Segments {
+		if IsChangeIdLike(segment.Text) {
+			return i
+		}
+	}
+
+	return -1
+}
+
+func (gr *GraphRowLine) FindPossibleCommitIdIdx(after int) int {
+	for i := after; i < len(gr.Segments); i++ {
+		segment := gr.Segments[i]
+		if IsHexLike(segment.Text) {
+			return i
+		}
+	}
+	return -1
 }
 
 func NewGraphRow() Row {

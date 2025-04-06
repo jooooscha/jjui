@@ -1,11 +1,12 @@
 package preview
 
 import (
+	"bufio"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/idursun/jjui/internal/config"
@@ -14,18 +15,26 @@ import (
 	"github.com/idursun/jjui/internal/ui/context"
 )
 
+type viewRange struct {
+	start int
+	end   int
+}
+
 type Model struct {
-	tag     int
-	view    viewport.Model
-	help    help.Model
-	width   int
-	height  int
-	content string
-	context context.AppContext
-	keyMap  config.KeyMappings[key.Binding]
+	tag              int
+	viewRange        *viewRange
+	help             help.Model
+	width            int
+	height           int
+	content          string
+	contentLineCount int
+	context          context.AppContext
+	keyMap           config.KeyMappings[key.Binding]
 }
 
 const DebounceTime = 10 * time.Millisecond
+
+var border = lipgloss.NewStyle().Border(lipgloss.NormalBorder())
 
 type refreshPreviewContentMsg struct {
 	Tag int
@@ -33,17 +42,6 @@ type refreshPreviewContentMsg struct {
 
 type updatePreviewContentMsg struct {
 	Content string
-}
-
-func (m *Model) ShortHelp() []key.Binding {
-	return []key.Binding{
-		m.view.KeyMap.HalfPageUp,
-		m.view.KeyMap.HalfPageDown,
-	}
-}
-
-func (m *Model) FullHelp() [][]key.Binding {
-	return [][]key.Binding{m.ShortHelp()}
 }
 
 func (m *Model) Width() int {
@@ -55,14 +53,11 @@ func (m *Model) Height() int {
 }
 
 func (m *Model) SetWidth(w int) {
-	content := lipgloss.NewStyle().MaxWidth(w - 2).Render(m.content)
-	m.view.SetContent(content)
-	m.view.Width = w
 	m.width = w
 }
 
 func (m *Model) SetHeight(h int) {
-	m.view.Height = h
+	m.viewRange.end = min(m.viewRange.start+h-3, m.contentLineCount)
 	m.height = h
 }
 
@@ -74,9 +69,8 @@ func (m *Model) Update(msg tea.Msg) (*Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case updatePreviewContentMsg:
 		m.content = msg.Content
-		content := lipgloss.NewStyle().MaxWidth(m.Width() - 4).Render(msg.Content)
-		m.view.SetContent(content)
-		m.view.GotoTop()
+		m.contentLineCount = strings.Count(m.content, "\n")
+		m.reset()
 	case common.SelectionChangedMsg, common.RefreshMsg:
 		m.tag++
 		tag := m.tag
@@ -103,36 +97,71 @@ func (m *Model) Update(msg tea.Msg) (*Model, tea.Cmd) {
 				}
 			}
 		}
+	case tea.KeyMsg:
+		switch {
+		case key.Matches(msg, m.keyMap.Preview.ScrollDown):
+			if m.viewRange.end < m.contentLineCount {
+				m.viewRange.start++
+				m.viewRange.end++
+			}
+		case key.Matches(msg, m.keyMap.Preview.ScrollUp):
+			if m.viewRange.start > 0 {
+				m.viewRange.start--
+				m.viewRange.end--
+			}
+		case key.Matches(msg, m.keyMap.Preview.HalfPageDown):
+			contentHeight := m.contentLineCount
+			halfPageSize := m.height / 2
+			if halfPageSize+m.viewRange.end > contentHeight {
+				halfPageSize = contentHeight - m.viewRange.end
+			}
+
+			m.viewRange.start += halfPageSize
+			m.viewRange.end += halfPageSize
+		case key.Matches(msg, m.keyMap.Preview.HalfPageUp):
+			halfPageSize := m.height / 2
+			if halfPageSize > m.viewRange.start {
+				halfPageSize = m.viewRange.start
+			}
+
+			m.viewRange.start -= halfPageSize
+			m.viewRange.end -= halfPageSize
+		}
 	}
-	var cmd tea.Cmd
-	m.view, cmd = m.view.Update(msg)
-	return m, cmd
+	return m, nil
 }
 
 func (m *Model) View() string {
-	return m.view.View()
+	var w strings.Builder
+	scanner := bufio.NewScanner(strings.NewReader(m.content))
+	current := 0
+	for scanner.Scan() {
+		line := scanner.Text()
+		if current >= m.viewRange.start && current <= m.viewRange.end {
+			if current > m.viewRange.start {
+				w.WriteString("\n")
+			}
+			w.WriteString(lipgloss.NewStyle().MaxWidth(m.width - 2).Render(line))
+		}
+		current++
+		if current > m.viewRange.end {
+			break
+		}
+	}
+	view := lipgloss.Place(m.width-2, m.height-2, 0, 0, w.String())
+	return border.Render(view)
 }
 
-func viewPortKeyMap(km config.KeyMappings[key.Binding]) viewport.KeyMap {
-	return viewport.KeyMap{
-		PageDown:     key.NewBinding(key.WithDisabled()),
-		PageUp:       key.NewBinding(key.WithDisabled()),
-		HalfPageUp:   km.Preview.HalfPageUp,
-		HalfPageDown: km.Preview.HalfPageDown,
-		Up:           km.Preview.ScrollUp,
-		Down:         km.Preview.ScrollDown,
-	}
+func (m *Model) reset() {
+	m.viewRange.start, m.viewRange.end = 0, m.height
 }
 
 func New(context context.AppContext) Model {
-	view := viewport.New(0, 0)
-	view.Style = lipgloss.NewStyle().Border(lipgloss.NormalBorder())
 	keyMap := context.KeyMap()
-	view.KeyMap = viewPortKeyMap(keyMap)
 	return Model{
-		context: context,
-		keyMap:  keyMap,
-		view:    view,
-		help:    help.New(),
+		viewRange: &viewRange{start: 0, end: 0},
+		context:   context,
+		keyMap:    keyMap,
+		help:      help.New(),
 	}
 }

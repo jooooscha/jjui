@@ -20,7 +20,7 @@ type Operation struct {
 func (s *Operation) HandleKey(msg tea.KeyMsg) tea.Cmd {
 	switch {
 	case key.Matches(msg, s.keyMap.Apply):
-		return tea.Batch(common.Close, s.context.RunInteractiveCommand(jj.Squash(s.From, s.Current.ChangeIdShort), common.Refresh))
+		return tea.Batch(common.Close, s.context.RunInteractiveCommand(jj.Squash(s.From, s.Current.ChangeId), common.Refresh))
 	case key.Matches(msg, s.keyMap.Cancel):
 		return common.Close
 	}
